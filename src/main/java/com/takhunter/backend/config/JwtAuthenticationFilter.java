@@ -37,11 +37,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         String authorizationHeader = request.getHeader("Authorization");
-        boolean kegiatanRequest = request.getRequestURI().startsWith("/api/eo/kegiatan");
+        String requestURI = request.getRequestURI();
+
+        // Cek apakah request membutuhkan pengawasan log otentikasi
+        boolean shouldLog = requestURI.startsWith("/api/eo/kegiatan") || requestURI.startsWith("/api/pendaftaran");
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            if (kegiatanRequest) {
-                log.warn("JWT missing for {} {}", request.getMethod(), request.getRequestURI());
+            if (shouldLog) {
+                log.info("Akses publik/tanpa token diizinkan untuk melewati filter ke rute: {} {}", request.getMethod(), requestURI);
             }
             filterChain.doFilter(request, response);
             return;
@@ -49,8 +52,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authorizationHeader.substring(7);
         if (!jwtUtil.isTokenValid(token)) {
-            if (kegiatanRequest) {
-                log.warn("JWT invalid for {} {}", request.getMethod(), request.getRequestURI());
+            if (shouldLog) {
+                log.warn("JWT invalid/expired untuk {} {}", request.getMethod(), requestURI);
             }
             filterChain.doFilter(request, response);
             return;
@@ -69,18 +72,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            if (kegiatanRequest) {
+            if (shouldLog) {
                 log.info(
-                        "JWT authenticated for {} {} email={} dbRole={} authority={}",
+                        "JWT terautentikasi untuk {} {} email={} dbRole={} authority={}",
                         request.getMethod(),
-                        request.getRequestURI(),
+                        requestURI,
                         user.getEmail(),
                         user.getRole(),
                         authority.getAuthority()
                 );
             }
-        } else if (kegiatanRequest) {
-            log.warn("JWT valid but user not found for {} {} email={}", request.getMethod(), request.getRequestURI(), email);
+        } else if (shouldLog) {
+            log.warn("JWT valid tetapi data user tidak ditemukan di database untuk {} {} email={}", request.getMethod(), requestURI, email);
         }
 
         filterChain.doFilter(request, response);
