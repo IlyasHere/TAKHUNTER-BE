@@ -60,12 +60,19 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/kegiatan/**").permitAll()
+                        
+                        // ===== PERBAIKAN: Mengizinkan Mahasiswa mendaftar kegiatan secara publik =====
+                        .requestMatchers("/api/pendaftaran/**").permitAll() 
+                        
+                        // Hak akses khusus Event Organizer
                         .requestMatchers(HttpMethod.POST, "/api/eo/kegiatan/**").hasAuthority("ROLE_EVENT_ORGANIZER")
                         .requestMatchers(HttpMethod.PUT, "/api/eo/kegiatan/**").hasAuthority("ROLE_EVENT_ORGANIZER")
                         .requestMatchers(HttpMethod.GET, "/api/eo/kegiatan/**").hasAuthority("ROLE_EVENT_ORGANIZER")
                         .requestMatchers(HttpMethod.DELETE, "/api/eo/kegiatan/**").hasAuthority("ROLE_EVENT_ORGANIZER")
+                        
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
