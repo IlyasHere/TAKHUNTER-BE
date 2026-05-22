@@ -1,7 +1,6 @@
 package com.takhunter.backend.dto;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,23 +11,22 @@ import lombok.Setter;
 @Setter
 @Builder
 @AllArgsConstructor
-public class KegiatanResponse {
+public class PendaftaranResponse {
 
     private Long id;
+    private Long kegiatanId;
     private String namaKegiatan;
-    private String deskripsi;
     private String kategori;
     private Integer poinTak;
-    private boolean wajib;
-    private String bannerPath;
     private LocalDate tanggal;
     private LocalTime waktu;
     private String lokasi;
-    private Integer kuotaPeserta;
-    private LocalDate batasPendaftaran;
-    private String statusPublikasi;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private Long eventOrganizerId;
-    private Long jumlahPendaftar;
+    private String eventOrganizerName;
+    private String namaMahasiswa;
+    private String nim;
+    private String programStudi;
+    private String email;
+    private String nomorWhatsApp;
+    private String alasan;
+    private String status;
 }

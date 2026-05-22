@@ -9,6 +9,7 @@ import com.takhunter.backend.model.StatusPublikasi;
 import com.takhunter.backend.model.User;
 import com.takhunter.backend.repository.EventOrganizerRepository;
 import com.takhunter.backend.repository.KegiatanRepository;
+import com.takhunter.backend.repository.PendaftaranRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,13 +37,16 @@ public class KegiatanService {
 
     private final KegiatanRepository kegiatanRepository;
     private final EventOrganizerRepository eventOrganizerRepository;
+    private final PendaftaranRepository pendaftaranRepository;
 
     public KegiatanService(
             KegiatanRepository kegiatanRepository,
-            EventOrganizerRepository eventOrganizerRepository
+            EventOrganizerRepository eventOrganizerRepository,
+            PendaftaranRepository pendaftaranRepository
     ) {
         this.kegiatanRepository = kegiatanRepository;
         this.eventOrganizerRepository = eventOrganizerRepository;
+        this.pendaftaranRepository = pendaftaranRepository;
     }
 
     public KegiatanResponse create(CreateKegiatanRequest request, MultipartFile banner) {
@@ -244,6 +248,7 @@ public class KegiatanService {
                 .createdAt(kegiatan.getCreatedAt())
                 .updatedAt(kegiatan.getUpdatedAt())
                 .eventOrganizerId(kegiatan.getEventOrganizer().getId())
+                .jumlahPendaftar(pendaftaranRepository.countByKegiatanId(kegiatan.getId()))
                 .build();
     }
 
