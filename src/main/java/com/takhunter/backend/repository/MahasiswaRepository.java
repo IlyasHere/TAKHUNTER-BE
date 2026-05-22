@@ -9,4 +9,6 @@ public interface MahasiswaRepository extends JpaRepository<Mahasiswa, Long> {
     boolean existsByNim(String nim);
 
     Optional<Mahasiswa> findByUserId(Long userId);
+
+    Optional<Mahasiswa> findByNimIgnoreCase(String nim);
 }

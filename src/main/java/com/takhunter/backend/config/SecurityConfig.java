@@ -73,6 +73,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/eo/kegiatan/**").hasAuthority("ROLE_EVENT_ORGANIZER")
                         .requestMatchers(HttpMethod.DELETE, "/api/eo/kegiatan/**").hasAuthority("ROLE_EVENT_ORGANIZER")
                         .requestMatchers("/api/eo/pendaftaran/**").hasAuthority("ROLE_EVENT_ORGANIZER")
+                        .requestMatchers("/api/eo/sertifikat/**").hasAuthority("ROLE_EVENT_ORGANIZER")
+                        .requestMatchers("/api/mahasiswa/sertifikat/**").hasAuthority("ROLE_MAHASISWA")
                         
                         .anyRequest().authenticated()
                 )
