@@ -2,7 +2,9 @@ package com.takhunter.backend.controller;
 
 import com.takhunter.backend.dto.CreateKegiatanRequest;
 import com.takhunter.backend.dto.KegiatanResponse;
+import com.takhunter.backend.dto.PendaftaranResponse;
 import com.takhunter.backend.service.KegiatanService;
+import com.takhunter.backend.service.PendaftaranService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,9 +25,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class KegiatanController {
 
     private final KegiatanService kegiatanService;
+    private final PendaftaranService pendaftaranService;
 
-    public KegiatanController(KegiatanService kegiatanService) {
+    public KegiatanController(KegiatanService kegiatanService, PendaftaranService pendaftaranService) {
         this.kegiatanService = kegiatanService;
+        this.pendaftaranService = pendaftaranService;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -45,6 +49,11 @@ public class KegiatanController {
     @GetMapping("/{id}")
     public KegiatanResponse getDetail(@PathVariable Long id) {
         return kegiatanService.getDetail(id);
+    }
+
+    @GetMapping("/{id}/pendaftaran")
+    public List<PendaftaranResponse> getPendaftar(@PathVariable Long id) {
+        return pendaftaranService.getPendaftarForMyKegiatan(id);
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

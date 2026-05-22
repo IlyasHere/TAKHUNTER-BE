@@ -12,6 +12,8 @@ public interface KegiatanRepository extends JpaRepository<Kegiatan, Long> {
 
     Optional<Kegiatan> findByIdAndEventOrganizerId(Long id, Long eventOrganizerId);
 
+    boolean existsByIdAndEventOrganizerId(Long id, Long eventOrganizerId);
+
     List<Kegiatan> findByStatusPublikasiOrderByCreatedAtDesc(StatusPublikasi statusPublikasi);
 
     Optional<Kegiatan> findByIdAndStatusPublikasi(Long id, StatusPublikasi statusPublikasi);
