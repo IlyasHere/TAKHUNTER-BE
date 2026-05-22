@@ -12,9 +12,16 @@ import com.takhunter.backend.repository.MahasiswaRepository;
 import com.takhunter.backend.repository.UserRepository;
 import com.takhunter.backend.util.JwtUtil;
 import jakarta.transaction.Transactional;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -22,6 +29,8 @@ public class AuthService {
 
     private static final String ROLE_MAHASISWA = "MAHASISWA";
     private static final String ROLE_EVENT_ORGANIZER = "EVENT_ORGANIZER";
+    private static final Path PROFILE_UPLOAD_DIRECTORY = Paths.get("uploads", "profiles");
+    private static final long MAX_PROFILE_PHOTO_SIZE = 2 * 1024 * 1024;
 
     private final UserRepository userRepository;
     private final MahasiswaRepository mahasiswaRepository;
@@ -104,16 +113,49 @@ public class AuthService {
     }
 
     public UserResponse check(String authorizationHeader) {
+        User user = getUserFromAuthorizationHeader(authorizationHeader);
+        return buildUserResponse(user);
+    }
+
+    @Transactional
+    public AuthResponse updateProfile(String authorizationHeader, String name, String email, MultipartFile profilePhoto) {
+        User user = getUserFromAuthorizationHeader(authorizationHeader);
+
+        if (isBlank(name)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nama wajib diisi");
+        }
+        if (isBlank(email)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email wajib diisi");
+        }
+
+        String normalizedEmail = email.trim().toLowerCase();
+        if (userRepository.existsByEmailAndIdNot(normalizedEmail, user.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email sudah digunakan user lain");
+        }
+
+        user.setName(name.trim());
+        user.setEmail(normalizedEmail);
+
+        String profilePhotoPath = saveProfilePhoto(profilePhoto);
+        if (profilePhotoPath != null) {
+            user.setProfilePhotoPath(profilePhotoPath);
+        }
+
+        User savedUser = userRepository.save(user);
+        String token = jwtUtil.generateToken(savedUser);
+
+        return buildAuthResponse("Profil berhasil diperbarui", token, savedUser);
+    }
+
+    private User getUserFromAuthorizationHeader(String authorizationHeader) {
         String token = getTokenFromHeader(authorizationHeader);
         if (!jwtUtil.isTokenValid(token)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token tidak valid atau sudah expired");
         }
 
         String email = jwtUtil.getEmailFromToken(token);
-        User user = userRepository.findByEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User tidak ditemukan"));
-
-        return buildUserResponse(user);
     }
 
     private void validateRegisterRequest(RegisterRequest request) {
@@ -171,7 +213,41 @@ public class AuthService {
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole())
+                .profilePhotoPath(user.getProfilePhotoPath())
                 .build();
+    }
+
+    private String saveProfilePhoto(MultipartFile profilePhoto) {
+        if (profilePhoto == null || profilePhoto.isEmpty()) {
+            return null;
+        }
+        if (profilePhoto.getSize() > MAX_PROFILE_PHOTO_SIZE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ukuran foto profil maksimal 2 MB");
+        }
+
+        String extension = getFileExtension(profilePhoto.getOriginalFilename()).toLowerCase();
+        if (!extension.matches("\\.(jpg|jpeg|png|webp)")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Foto profil wajib JPG, PNG, atau WEBP");
+        }
+
+        String fileName = UUID.randomUUID() + extension;
+
+        try {
+            Files.createDirectories(PROFILE_UPLOAD_DIRECTORY);
+            Path targetPath = PROFILE_UPLOAD_DIRECTORY.resolve(fileName);
+            Files.copy(profilePhoto.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+            return "/uploads/profiles/" + fileName;
+        } catch (IOException exception) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Gagal upload foto profil");
+        }
+    }
+
+    private String getFileExtension(String fileName) {
+        if (isBlank(fileName) || !fileName.contains(".")) {
+            return "";
+        }
+
+        return fileName.substring(fileName.lastIndexOf("."));
     }
 
     private String getTokenFromHeader(String authorizationHeader) {
