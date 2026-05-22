@@ -40,7 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
 
         // Cek apakah request membutuhkan pengawasan log otentikasi
-        boolean shouldLog = requestURI.startsWith("/api/eo/kegiatan") || requestURI.startsWith("/api/pendaftaran");
+        boolean shouldLog = requestURI.startsWith("/api/eo/kegiatan") || requestURI.startsWith("/api/eo/pendaftaran") || requestURI.startsWith("/api/pendaftaran");
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             if (shouldLog) {

@@ -72,6 +72,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/eo/kegiatan/**").hasAuthority("ROLE_EVENT_ORGANIZER")
                         .requestMatchers(HttpMethod.GET, "/api/eo/kegiatan/**").hasAuthority("ROLE_EVENT_ORGANIZER")
                         .requestMatchers(HttpMethod.DELETE, "/api/eo/kegiatan/**").hasAuthority("ROLE_EVENT_ORGANIZER")
+                        .requestMatchers("/api/eo/pendaftaran/**").hasAuthority("ROLE_EVENT_ORGANIZER")
                         
                         .anyRequest().authenticated()
                 )
@@ -102,6 +103,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(List.of(
                 HttpMethod.GET.name(),
                 HttpMethod.POST.name(),
+                HttpMethod.PATCH.name(),
                 HttpMethod.PUT.name(),
                 HttpMethod.DELETE.name(),
                 HttpMethod.OPTIONS.name()
