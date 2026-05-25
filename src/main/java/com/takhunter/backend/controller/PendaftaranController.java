@@ -23,6 +23,8 @@ import org.springframework.web.server.ResponseStatusException;
 @CrossOrigin(origins = "*")
 public class PendaftaranController {
 
+    private static final String ROLE_MAHASISWA = "MAHASISWA";
+
     private final PendaftaranRepository pendaftaranRepository;
     private final KegiatanRepository kegiatanRepository;
     private final MahasiswaRepository mahasiswaRepository;
@@ -56,12 +58,16 @@ public class PendaftaranController {
     @PostMapping
     public ResponseEntity<?> daftarKegiatan(@RequestBody PendaftaranRequest request) {
         try {
-            if (request.getKegiatanId() == null) {
-                return ResponseEntity.badRequest().body(Map.of("message", "ID kegiatan wajib dikirim."));
+            User user = getLoggedInUser();
+            if (!ROLE_MAHASISWA.equals(normalizeRole(user.getRole()))) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Hanya mahasiswa yang bisa mendaftar kegiatan."));
             }
 
-            if (isBlank(request.getNim())) {
-                return ResponseEntity.badRequest().body(Map.of("message", "NIM wajib diisi."));
+            Mahasiswa mahasiswa = mahasiswaRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Data mahasiswa tidak ditemukan."));
+
+            if (request.getKegiatanId() == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "ID kegiatan wajib dikirim."));
             }
 
             if (isBlank(request.getNomorWhatsApp())) {
@@ -70,10 +76,10 @@ public class PendaftaranController {
 
             Pendaftaran pendaftaran = new Pendaftaran();
             pendaftaran.setKegiatanId(request.getKegiatanId());
-            pendaftaran.setNamaMahasiswa(request.getNamaMahasiswa());
-            pendaftaran.setNim(request.getNim());
+            pendaftaran.setNamaMahasiswa(user.getName());
+            pendaftaran.setNim(mahasiswa.getNim());
             pendaftaran.setProgramStudi(request.getProgramStudi());
-            pendaftaran.setEmail(request.getEmail());
+            pendaftaran.setEmail(user.getEmail());
             pendaftaran.setNomorWhatsApp(request.getNomorWhatsApp());
             pendaftaran.setAlasan(request.getAlasan());
             
@@ -88,6 +94,16 @@ public class PendaftaranController {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private String normalizeRole(String role) {
+        if (role == null) {
+            return "";
+        }
+
+        return role.trim()
+                .replace("-", "_")
+                .toUpperCase();
     }
 
     private User getLoggedInUser() {

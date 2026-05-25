@@ -11,4 +11,6 @@ public interface MahasiswaRepository extends JpaRepository<Mahasiswa, Long> {
     Optional<Mahasiswa> findByUserId(Long userId);
 
     Optional<Mahasiswa> findByNimIgnoreCase(String nim);
+
+    Optional<Mahasiswa> findByUser_EmailIgnoreCase(String email);
 }

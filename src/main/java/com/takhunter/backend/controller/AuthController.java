@@ -40,6 +40,11 @@ public class AuthController {
         return authService.check(authorizationHeader);
     }
 
+    @GetMapping("/me")
+    public UserResponse me(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        return authService.check(authorizationHeader);
+    }
+
     @PutMapping("/profile")
     public AuthResponse updateProfile(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,

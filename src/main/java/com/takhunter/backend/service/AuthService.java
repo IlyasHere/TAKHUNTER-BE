@@ -208,12 +208,18 @@ public class AuthService {
     }
 
     private UserResponse buildUserResponse(User user) {
+        Mahasiswa mahasiswa = ROLE_MAHASISWA.equals(normalizeRole(user.getRole()))
+                ? mahasiswaRepository.findByUserId(user.getId()).orElse(null)
+                : null;
+
         return UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole())
                 .profilePhotoPath(user.getProfilePhotoPath())
+                .nim(mahasiswa != null ? mahasiswa.getNim() : null)
+                .totalPoinTak(mahasiswa != null ? mahasiswa.getTotalPoinTak() : null)
                 .build();
     }
 

@@ -276,7 +276,14 @@ public class SertifikatService {
 
     private Mahasiswa resolveMahasiswa(Pendaftaran pendaftaran) {
         if (!isBlank(pendaftaran.getNim())) {
-            return mahasiswaRepository.findByNimIgnoreCase(pendaftaran.getNim().trim()).orElse(null);
+            Mahasiswa mahasiswa = mahasiswaRepository.findByNimIgnoreCase(pendaftaran.getNim().trim()).orElse(null);
+            if (mahasiswa != null) {
+                return mahasiswa;
+            }
+        }
+
+        if (!isBlank(pendaftaran.getEmail())) {
+            return mahasiswaRepository.findByUser_EmailIgnoreCase(pendaftaran.getEmail().trim()).orElse(null);
         }
 
         return null;
